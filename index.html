@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI 人格测试</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div id="start-screen" class="screen active">
+            <div class="container">
+                <h1>MBTI 人格测试</h1>
+                <p>专业版92题测试，发现真实的你</p>
+                <button id="start-btn" class="primary-btn">开始测试</button>
+            </div>
+        </div>
+
+        <div id="question-screen" class="screen">
+            <div class="container">
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div class="question-header">
+                    <span id="question-number">1 / 92</span>
+                </div>
+                <div id="question-text" class="question-text"></div>
+                <div class="answer-options">
+                    <div class="option" data-score="1">
+                        <span class="label">非常不符合</span>
+                    </div>
+                    <div class="option" data-score="2">
+                        <span class="label">不太符合</span>
+                    </div>
+                    <div class="option" data-score="3">
+                        <span class="label">一般</span>
+                    </div>
+                    <div class="option" data-score="4">
+                        <span class="label">比较符合</span>
+                    </div>
+                    <div class="option" data-score="5">
+                        <span class="label">非常符合</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="container">
+                <h2>你的 MBTI 类型</h2>
+                <div id="mbti-type" class="mbti-type"></div>
+                <div id="percentages" class="percentages"></div>
+                <button id="restart-btn" class="secondary-btn">重新测试</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="mbti-core.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
