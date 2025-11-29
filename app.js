@@ -411,14 +411,36 @@ class MBTIApp {
   }
 
   // 导出Markdown分析报告
-  exportMarkdown() {
+  async exportMarkdown() {
     if (!this.currentTestData) {
       alert('没有测试数据可导出');
       return;
     }
 
-    this.dataRecorder.exportToMarkdown();
-    console.log('📄 分析报告导出完成');
+    // 检查是否有LLM分析管理器
+    if (window.mbtiAnalysisManager) {
+      try {
+        // 尝试生成AI分析报告
+        await window.mbtiAnalysisManager.generateAndExportAnalysis();
+      } catch (error) {
+        // 如果AI分析失败，提供备选方案
+        console.warn('🤖 AI分析失败，使用原始模板:', error.message);
+
+        const userChoice = confirm(
+          `AI分析暂时不可用: ${error.message}\n\n` +
+          '是否下载原始分析模板？'
+        );
+
+        if (userChoice) {
+          this.dataRecorder.exportToMarkdown();
+          console.log('📄 原始分析模板导出完成');
+        }
+      }
+    } else {
+      // 如果没有LLM分析管理器，使用原始导出
+      this.dataRecorder.exportToMarkdown();
+      console.log('📄 分析报告导出完成');
+    }
   }
 
   restartTest() {
