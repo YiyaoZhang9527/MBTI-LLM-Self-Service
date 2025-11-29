@@ -1,6 +1,6 @@
 """
-MBTI分析服务
-整合LLM客户端和Prompt管理，提供MBTI分析的核心业务逻辑
+简化的MBTI分析服务
+直接使用用户的markdown模板，支持对话功能
 """
 
 import json
@@ -12,16 +12,16 @@ from typing import Dict, List, Optional, Any
 
 from config.config_loader import Config
 from llm.llm_client import LLMFactory
-from prompts.mbti_prompts import MBTIPrompts
+from prompts.mbti_prompts import SimplePrompts
 
 
-class MBTIAnalysisService:
-    """MBTI分析服务"""
+class SimpleMBTIService:
+    """简化的MBTI分析服务"""
 
     def __init__(self, config: Config):
         """初始化服务"""
         self.config = config
-        self.prompts = MBTIPrompts()
+        self.prompts = SimplePrompts()
 
         # 获取可用的LLM客户端
         provider = config.get_available_provider()
@@ -31,15 +31,20 @@ class MBTIAnalysisService:
         print(f"✅ 使用LLM供应商: {provider}")
         print(f"✅ 模型: {provider_config['model']}")
 
-    def analyze_mbti_data(self, mbti_data: str, analysis_type: str = "full") -> Dict[str, Any]:
-        """分析MBTI数据"""
+    def analyze_with_user_template(self, user_markdown: str) -> Dict[str, Any]:
+        """使用用户的markdown模板进行分析"""
         try:
-            # 验证数据格式
-            if not self.prompts.validate_mbti_data(mbti_data):
-                raise ValueError("MBTI数据格式不正确")
-
-            # 构建消息
-            messages = self._build_messages(mbti_data, analysis_type)
+            # 构建消息：系统提示词 + 用户markdown
+            messages = [
+                {
+                    "role": "system",
+                    "content": self.prompts.get_system_prompt()
+                },
+                {
+                    "role": "user",
+                    "content": user_markdown
+                }
+            ]
 
             # 生成分析报告
             start_time = time.time()
@@ -54,18 +59,18 @@ class MBTIAnalysisService:
             result = {
                 'success': True,
                 'analysis_id': str(uuid.uuid4()),
-                'analysis_type': analysis_type,
                 'response': response,
+                'session_id': str(uuid.uuid4()),  # 用于后续对话
                 'metadata': {
                     'analysis_time': round(analysis_time, 2),
                     'model': self.llm_client.model,
                     'timestamp': datetime.now().isoformat(),
-                    'data_length': len(mbti_data)
+                    'data_length': len(user_markdown)
                 }
             }
 
             # 保存分析结果
-            self._save_analysis_result(result)
+            self._save_conversation(result, user_markdown)
 
             return result
 
@@ -81,33 +86,51 @@ class MBTIAnalysisService:
             }
 
             # 保存错误结果
-            self._save_analysis_result(error_result)
+            self._save_conversation(error_result, user_markdown)
 
             return error_result
 
-    def follow_up_analysis(self, previous_analysis: str, user_question: str) -> Dict[str, Any]:
-        """后续分析"""
+    def continue_conversation(self, session_id: str, user_question: str, conversation_history: List[Dict]) -> Dict[str, Any]:
+        """继续对话"""
         try:
+            # 构建对话历史
             messages = [
                 {
                     "role": "system",
                     "content": self.prompts.get_system_prompt()
-                },
-                {
-                    "role": "user",
-                    "content": f"之前的分析报告：\n\n{previous_analysis}\n\n用户问题：{user_question}\n\n{self.prompts.get_follow_up_prompt()}"
                 }
             ]
 
+            # 添加历史对话
+            messages.extend(conversation_history)
+
+            # 添加新问题
+            messages.append({
+                "role": "user",
+                "content": user_question
+            })
+
+            # 生成回复
             response = self.llm_client.generate_response(
                 messages=messages,
                 temperature=0.7,
                 max_tokens=2000
             )
 
+            # 保存对话记录
+            conversation_record = {
+                'session_id': session_id,
+                'user_question': user_question,
+                'ai_response': response,
+                'timestamp': datetime.now().isoformat()
+            }
+
+            self._save_conversation_message(conversation_record)
+
             return {
                 'success': True,
                 'response': response,
+                'session_id': session_id,
                 'timestamp': datetime.now().isoformat()
             }
 
@@ -118,28 +141,8 @@ class MBTIAnalysisService:
                 'timestamp': datetime.now().isoformat()
             }
 
-    def _build_messages(self, mbti_data: str, analysis_type: str) -> List[Dict[str, str]]:
-        """构建LLM消息"""
-        system_prompt = self.prompts.get_system_prompt()
-
-        if analysis_type == "quick":
-            user_prompt = f"{self.prompts.get_quick_analysis_prompt()}\n\n用户MBTI测试数据：\n\n{mbti_data}"
-        else:
-            user_prompt = f"{self.prompts.get_analysis_prompt()}\n\n用户MBTI测试数据：\n\n{mbti_data}"
-
-        return [
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-            {
-                "role": "user",
-                "content": user_prompt
-            }
-        ]
-
-    def _save_analysis_result(self, result: Dict[str, Any]) -> None:
-        """保存分析结果到文件"""
+    def _save_conversation(self, result: Dict[str, Any], user_markdown: str) -> None:
+        """保存对话记录"""
         try:
             # 创建输出目录
             output_dir = Path(self.config.output_dir)
@@ -150,26 +153,54 @@ class MBTIAnalysisService:
             analysis_id = result['analysis_id']
             status = "success" if result['success'] else "error"
 
-            filename = f"mbti_analysis_{timestamp}_{analysis_id[:8]}_{status}.json"
+            filename = f"conversation_{timestamp}_{analysis_id[:8]}_{status}.json"
             filepath = output_dir / filename
 
-            # 保存到文件
-            with open(filepath, 'w', encoding='utf-8') as f:
-                json.dump(result, f, ensure_ascii=False, indent=2)
+            # 保存完整对话记录
+            conversation_record = {
+                'session_id': result.get('session_id'),
+                'analysis_id': analysis_id,
+                'user_markdown': user_markdown,
+                'ai_response': result.get('response') if result['success'] else None,
+                'error': result.get('error') if not result['success'] else None,
+                'metadata': result.get('metadata', {}),
+                'timestamp': datetime.now().isoformat()
+            }
 
-            print(f"✅ 分析结果已保存: {filepath}")
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(conversation_record, f, ensure_ascii=False, indent=2)
+
+            print(f"✅ 对话记录已保存: {filepath}")
 
         except Exception as e:
-            print(f"⚠️ 保存分析结果失败: {str(e)}")
+            print(f"⚠️ 保存对话记录失败: {str(e)}")
+
+    def _save_conversation_message(self, conversation_record: Dict[str, Any]) -> None:
+        """保存单条对话消息"""
+        try:
+            output_dir = Path(self.config.output_dir)
+            output_dir.mkdir(exist_ok=True)
+
+            # 生成文件名
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"chat_{conversation_record['session_id'][:8]}_{timestamp}.json"
+            filepath = output_dir / filename
+
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(conversation_record, f, ensure_ascii=False, indent=2)
+
+            print(f"✅ 对话消息已保存: {filepath}")
+
+        except Exception as e:
+            print(f"⚠️ 保存对话消息失败: {str(e)}")
 
     def get_service_status(self) -> Dict[str, Any]:
         """获取服务状态"""
         try:
-            # 检查LLM客户端状态
             client_status = self.llm_client.validate_config()
 
             return {
-                'service': 'MBTI Analysis Service',
+                'service': 'Simple MBTI Analysis Service',
                 'status': 'healthy' if client_status else 'error',
                 'llm_provider': type(self.llm_client).__name__,
                 'model': self.llm_client.model,
@@ -182,7 +213,7 @@ class MBTIAnalysisService:
             }
         except Exception as e:
             return {
-                'service': 'MBTI Analysis Service',
+                'service': 'Simple MBTI Analysis Service',
                 'status': 'error',
                 'error': str(e),
                 'timestamp': datetime.now().isoformat()

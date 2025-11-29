@@ -417,11 +417,11 @@ class MBTIApp {
       return;
     }
 
-    // 检查是否有LLM分析管理器
-    if (window.mbtiAnalysisManager) {
+    // 检查是否有简化的LLM分析管理器
+    if (window.simpleMBTIAnalysisManager) {
       try {
         // 尝试生成AI分析报告
-        await window.mbtiAnalysisManager.generateAndExportAnalysis();
+        await window.simpleMBTIAnalysisManager.generateAndExportAnalysis();
       } catch (error) {
         // 如果AI分析失败，提供备选方案
         console.warn('🤖 AI分析失败，使用原始模板:', error.message);

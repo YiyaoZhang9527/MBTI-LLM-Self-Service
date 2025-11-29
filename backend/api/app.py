@@ -1,15 +1,15 @@
 """
-Flask API服务
-提供MBTI分析的RESTful API接口
+简化的Flask API服务
+提供直接的MBTI markdown分析对话接口
 """
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import traceback
 from pathlib import Path
 
 from config.config_loader import Config
-from llm.mbti_service import MBTIAnalysisService
+from llm.mbti_service import SimpleMBTIService
 
 
 def create_app():
@@ -23,20 +23,23 @@ def create_app():
     config = Config()
 
     try:
-        # 初始化MBTI分析服务
-        mbti_service = MBTIAnalysisService(config)
-        print("✅ MBTI分析服务初始化成功")
+        # 初始化简化的MBTI分析服务
+        mbti_service = SimpleMBTIService(config)
+        print("✅ 简化MBTI分析服务初始化成功")
     except Exception as e:
         print(f"❌ MBTI分析服务初始化失败: {str(e)}")
         mbti_service = None
+
+    # 存储对话会话的内存存储（生产环境建议使用Redis等）
+    conversation_sessions = {}
 
     @app.route('/health', methods=['GET'])
     def health_check():
         """健康检查接口"""
         return jsonify({
             'status': 'healthy',
-            'service': 'MBTI LLM API',
-            'version': '1.0.0'
+            'service': 'Simple MBTI LLM API',
+            'version': '2.0.0'
         })
 
     @app.route('/status', methods=['GET'])
@@ -52,8 +55,8 @@ def create_app():
         return jsonify(status)
 
     @app.route('/analyze', methods=['POST'])
-    def analyze_mbti():
-        """MBTI分析接口"""
+    def analyze_markdown():
+        """MBTI markdown分析接口"""
         try:
             if not mbti_service:
                 return jsonify({
@@ -68,31 +71,51 @@ def create_app():
                     'error': '请求数据为空'
                 }), 400
 
-            # 验证必要参数
-            mbti_data = data.get('mbti_data', '')
-            analysis_type = data.get('analysis_type', 'full')
-
-            if not mbti_data:
+            # 获取用户markdown内容
+            markdown_content = data.get('markdown_content', '')
+            if not markdown_content:
                 return jsonify({
                     'success': False,
-                    'error': '缺少mbti_data参数'
-                }), 400
-
-            # 验证analysis_type
-            valid_types = ['full', 'quick']
-            if analysis_type not in valid_types:
-                return jsonify({
-                    'success': False,
-                    'error': f'无效的analysis_type，支持的类型: {valid_types}'
+                    'error': '缺少markdown_content参数'
                 }), 400
 
             # 执行分析
-            result = mbti_service.analyze_mbti_data(mbti_data, analysis_type)
+            result = mbti_service.analyze_with_user_template(markdown_content)
 
             if result['success']:
-                return jsonify(result)
+                # 存储会话信息
+                session_id = result['session_id']
+                conversation_sessions[session_id] = {
+                    'user_markdown': markdown_content,
+                    'analysis_result': result['response'],
+                    'timestamp': result['metadata']['timestamp'],
+                    'history': [
+                        {
+                            "role": "system",
+                            "content": "系统提示词：专业的MBTI人格分析师"
+                        },
+                        {
+                            "role": "user",
+                            "content": markdown_content
+                        },
+                        {
+                            "role": "assistant",
+                            "content": result['response']
+                        }
+                    ]
+                }
+
+                return jsonify({
+                    'success': True,
+                    'session_id': session_id,
+                    'analysis': result['response'],
+                    'metadata': result['metadata']
+                })
             else:
-                return jsonify(result), 500
+                return jsonify({
+                    'success': False,
+                    'error': result['error']
+                }), 500
 
         except Exception as e:
             error_msg = f"分析过程发生错误: {str(e)}"
@@ -104,9 +127,9 @@ def create_app():
                 'error': error_msg
             }), 500
 
-    @app.route('/followup', methods=['POST'])
-    def follow_up_analysis():
-        """后续分析接口"""
+    @app.route('/chat', methods=['POST'])
+    def continue_chat():
+        """继续对话接口"""
         try:
             if not mbti_service:
                 return jsonify({
@@ -121,24 +144,58 @@ def create_app():
                     'error': '请求数据为空'
                 }), 400
 
-            previous_analysis = data.get('previous_analysis', '')
+            session_id = data.get('session_id', '')
             user_question = data.get('user_question', '')
 
-            if not previous_analysis or not user_question:
+            if not session_id or not user_question:
                 return jsonify({
                     'success': False,
-                    'error': '缺少previous_analysis或user_question参数'
+                    'error': '缺少session_id或user_question参数'
                 }), 400
 
-            result = mbti_service.follow_up_analysis(previous_analysis, user_question)
+            # 检查会话是否存在
+            if session_id not in conversation_sessions:
+                return jsonify({
+                    'success': False,
+                    'error': '会话不存在或已过期'
+                }), 404
+
+            # 获取对话历史
+            conversation_history = conversation_sessions[session_id]['history']
+
+            # 继续对话
+            result = mbti_service.continue_conversation(
+                session_id,
+                user_question,
+                conversation_history
+            )
 
             if result['success']:
-                return jsonify(result)
+                # 更新对话历史
+                conversation_sessions[session_id]['history'].extend([
+                    {
+                        "role": "user",
+                        "content": user_question
+                    },
+                    {
+                        "role": "assistant",
+                        "content": result['response']
+                    }
+                ])
+
+                return jsonify({
+                    'success': True,
+                    'response': result['response'],
+                    'session_id': session_id
+                })
             else:
-                return jsonify(result), 500
+                return jsonify({
+                    'success': False,
+                    'error': result['error']
+                }), 500
 
         except Exception as e:
-            error_msg = f"后续分析发生错误: {str(e)}"
+            error_msg = f"对话过程发生错误: {str(e)}"
             print(f"❌ {error_msg}")
             print(traceback.format_exc())
 
@@ -147,50 +204,51 @@ def create_app():
                 'error': error_msg
             }), 500
 
-    @app.route('/outputs/<filename>', methods=['GET'])
-    def get_output_file(filename):
-        """获取输出文件"""
+    @app.route('/sessions/<session_id>', methods=['GET'])
+    def get_session(session_id):
+        """获取会话信息"""
         try:
-            output_dir = Path(config.output_dir)
-            return send_from_directory(output_dir, filename)
-        except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': f'文件获取失败: {str(e)}'
-            }), 404
-
-    @app.route('/outputs', methods=['GET'])
-    def list_output_files():
-        """列出输出文件"""
-        try:
-            output_dir = Path(config.output_dir)
-            if not output_dir.exists():
+            if session_id not in conversation_sessions:
                 return jsonify({
-                    'success': True,
-                    'files': []
-                })
+                    'success': False,
+                    'error': '会话不存在'
+                }), 404
 
-            files = []
-            for file_path in output_dir.glob("*.json"):
-                stat = file_path.stat()
-                files.append({
-                    'filename': file_path.name,
-                    'size': stat.st_size,
-                    'created_time': stat.st_ctime
-                })
-
-            # 按创建时间倒序排列
-            files.sort(key=lambda x: x['created_time'], reverse=True)
-
+            session_data = conversation_sessions[session_id]
             return jsonify({
                 'success': True,
-                'files': files
+                'session_id': session_id,
+                'analysis_result': session_data['analysis_result'],
+                'timestamp': session_data['timestamp'],
+                'message_count': len(session_data['history']) // 2  # 用户消息数量
             })
 
         except Exception as e:
             return jsonify({
                 'success': False,
-                'error': f'文件列表获取失败: {str(e)}'
+                'error': f'获取会话失败: {str(e)}'
+            }), 500
+
+    @app.route('/sessions/<session_id>', methods=['DELETE'])
+    def delete_session(session_id):
+        """删除会话"""
+        try:
+            if session_id in conversation_sessions:
+                del conversation_sessions[session_id]
+                return jsonify({
+                    'success': True,
+                    'message': '会话已删除'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': '会话不存在'
+                }), 404
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'删除会话失败: {str(e)}'
             }), 500
 
     @app.errorhandler(404)
@@ -219,9 +277,10 @@ if __name__ == '__main__':
     # 加载Flask配置
     config = Config()
 
-    print(f"🚀 启动MBTI分析API服务")
+    print(f"🚀 启动简化MBTI分析API服务")
     print(f"📡 服务地址: http://localhost:{config.flask_config['port']}")
     print(f"🔧 调试模式: {config.flask_config['debug']}")
+    print(f"📝 功能: 直接使用用户markdown模板进行AI分析")
 
     # 启动服务
     app.run(
