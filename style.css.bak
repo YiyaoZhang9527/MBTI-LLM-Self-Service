@@ -39,92 +39,16 @@ body {
 
 body {
     font-family: var(--font-body);
-    background-color: #050814;
-    /* Deep dark blue/black */
+    background: radial-gradient(circle at 50% 0%, var(--background-end), var(--background-start));
+    background-attachment: fixed;
     color: var(--text-primary);
     line-height: 1.6;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-    /* Prevent scrolling */
-    margin: 0;
-    padding: 0;
-}
-
-#background-layer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -2;
-    background: #050814;
-    overflow: hidden;
-}
-
-/* Static Stars using box-shadow for performance and realism */
-#background-layer::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 2px;
-    height: 2px;
-    background: white;
-    box-shadow:
-        10vw 10vh 0 0px #fff, 20vw 80vh 0 1px #fff, 30vw 30vh 0 0px #fff,
-        40vw 50vh 0 1px #fff, 50vw 10vh 0 0px #fff, 60vw 90vh 0 1px #fff,
-        70vw 40vh 0 0px #fff, 80vw 20vh 0 1px #fff, 90vw 60vh 0 0px #fff,
-        15vw 45vh 0 1px #fff, 25vw 15vh 0 0px #fff, 35vw 75vh 0 1px #fff,
-        45vw 25vh 0 0px #fff, 55vw 85vh 0 1px #fff, 65vw 35vh 0 0px #fff,
-        75vw 55vh 0 1px #fff, 85vw 5vh 0 0px #fff, 95vw 95vh 0 1px #fff,
-        5vw 65vh 0 0px #fff, 12vw 32vh 0 1px #fff, 48vw 58vh 0 0px #fff;
-    opacity: 0.6;
-    animation: twinkle-static 5s infinite alternate;
-}
-
-/* Nebula Effect */
-#background-layer::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background:
-        radial-gradient(circle at 20% 30%, rgba(4, 20, 50, 0.4) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(20, 4, 50, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(10, 30, 60, 0.2) 0%, transparent 60%);
-    filter: blur(20px);
-    z-index: -1;
-}
-
-/* Canvas particle layer */
-#star-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    pointer-events: none;
-}
-
-@keyframes twinkle-static {
-    0% {
-        opacity: 0.4;
-    }
-
-    100% {
-        opacity: 0.8;
-    }
+    min-height: 100vh;
 }
 
 #app {
     min-height: 100vh;
     position: relative;
-    z-index: 10;
-    /* Ensure content is above background layers */
 }
 
 .screen {
@@ -132,16 +56,13 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.5s ease;
-    /* Only fade, no slide */
-    overflow-y: auto;
-    /* Allow internal scrolling if absolutely necessary, but hide main scrollbar */
+    transition: all 0.3s ease;
 }
 
 .screen.active {
@@ -150,42 +71,27 @@ body {
 }
 
 .container {
-    max-width: 800px;
-    width: 90%;
-    padding: 16px;
-    /* Reduced padding */
+    max-width: 600px;
+    width: 100%;
+    padding: 20px;
     text-align: center;
-    max-height: 100vh;
-    /* Allow full height */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    /* Center content vertically */
-}
-
-.container::-webkit-scrollbar {
-    display: none;
 }
 
 /* Start Screen */
 #start-screen h1 {
     font-family: var(--font-heading);
-    font-size: 2.5rem;
-    /* Reduced font size */
+    font-size: 3.5rem;
     font-weight: 700;
     color: var(--primary-color);
     text-shadow: 0 0 20px rgba(245, 208, 32, 0.3);
-    margin-bottom: 16px;
-    /* Reduced margin */
+    margin-bottom: 24px;
     letter-spacing: 2px;
 }
 
 #start-screen p {
-    font-size: 1.1rem;
-    /* Reduced font size */
+    font-size: 1.3rem;
     color: var(--text-secondary);
-    margin-bottom: 32px;
-    /* Reduced margin */
+    margin-bottom: 48px;
     font-weight: 300;
 }
 
@@ -250,79 +156,19 @@ body {
 }
 
 .question-header {
-    margin-bottom: 16px;
-    /* Reduced margin */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.back-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--text-secondary);
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
-    font-family: var(--font-body);
-}
-
-.back-btn:hover:not(:disabled) {
-    background: rgba(79, 172, 254, 0.2);
-    border-color: var(--secondary-color);
-    color: var(--secondary-color);
-    transform: translateY(-1px);
-}
-
-.back-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-.next-btn {
-    background: rgba(79, 172, 254, 0.2);
-    border: 1px solid var(--border-color);
-    color: var(--secondary-color);
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
-    font-family: var(--font-body);
-}
-
-.next-btn:hover:not(:disabled) {
-    background: rgba(79, 172, 254, 0.4);
-    border-color: var(--secondary-color);
-    color: var(--secondary-color);
-    transform: translateY(-1px);
-    box-shadow: 0 0 15px rgba(79, 172, 254, 0.3);
-}
-
-.next-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+    margin-bottom: 24px;
 }
 
 #question-number {
     color: var(--text-secondary);
     font-weight: 500;
-    font-size: 0.9rem;
 }
 
 .question-text {
-    font-size: 1.2rem;
-    /* Reduced font size */
+    font-size: 1.4rem;
     font-weight: 600;
-    line-height: 1.4;
-    margin-bottom: 24px;
-    /* Reduced margin */
+    line-height: 1.6;
+    margin-bottom: 40px;
     color: var(--text-primary);
 }
 
@@ -333,8 +179,7 @@ body {
 }
 
 .option {
-    padding: 16px;
-    /* Reduced padding */
+    padding: 24px;
     background: var(--card-background);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
@@ -377,24 +222,20 @@ body {
 
 .mbti-type {
     font-family: var(--font-heading);
-    font-size: 4rem;
-    /* Reduced font size */
+    font-size: 5rem;
     font-weight: 700;
     color: var(--primary-color);
-    margin-bottom: 24px;
-    /* Reduced margin */
+    margin-bottom: 40px;
     text-transform: uppercase;
-    letter-spacing: 8px;
+    letter-spacing: 12px;
     text-shadow: 0 0 30px rgba(245, 208, 32, 0.4);
 }
 
 .percentages {
     background: var(--card-background);
     border-radius: var(--border-radius);
-    padding: 24px;
-    /* Reduced padding */
-    margin-bottom: 24px;
-    /* Reduced margin */
+    padding: 32px;
+    margin-bottom: 40px;
     box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
     backdrop-filter: blur(10px);

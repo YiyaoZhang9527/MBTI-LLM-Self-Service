@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下一题按钮禁用功能测试</title>
+    <link rel="stylesheet" href="style.css?v=20251129-1730">
+    <meta name="cache-control" content="no-cache, no-store, must-revalidate">
+    <style>
+        .test-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            z-index: 9999;
+            max-width: 350px;
+            font-size: 12px;
+        }
+        .test-log {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .log-entry {
+            margin: 3px 0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .log-info { background: rgba(33, 150, 243, 0.2); }
+        .log-success { background: rgba(76, 175, 80, 0.2); }
+        .log-warning { background: rgba(255, 193, 7, 0.2); }
+        .log-error { background: rgba(244, 67, 54, 0.2); }
+        .state-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .state-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+        }
+        .highlight {
+            background: rgba(255, 193, 7, 0.3);
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        .disabled-text { color: #ff6b6b; }
+        .enabled-text { color: #4caf50; }
+    </style>
+</head>
+<body>
+    <div class="test-panel">
+        <h3>🔒 下一题按钮禁用测试</h3>
+        <div class="state-info" id="state-info">
+            <div class="state-row">
+                <span>当前题号:</span>
+                <span id="current-q">-</span>
+            </div>
+            <div class="state-row">
+                <span>已选分数:</span>
+                <span id="selected-score" class="highlight">-</span>
+            </div>
+            <div class="state-row">
+                <span>下一题按钮:</span>
+                <span id="next-status">-</span>
+            </div>
+            <div class="state-row">
+                <span>上一题按钮:</span>
+                <span id="back-status">-</span>
+            </div>
+        </div>
+
+        <div style="margin: 10px 0; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+            <strong>测试场景：</strong>
+            <div style="margin-top: 5px; font-size: 11px;">
+                1. 选择答案后，下一题按钮应启用<br>
+                2. 未选择时，下一题按钮应禁用<br>
+                3. 最后一题，下一题按钮显示"完成测试"
+            </div>
+        </div>
+
+        <button onclick="simulateSelect(3)" style="margin:5px 0;padding:5px 10px;width:100%;">模拟选择"一般"</button>
+        <button onclick="simulateSelect(5)" style="margin:5px 0;padding:5px 10px;width:100%;">模拟选择"非常符合"</button>
+        <button onclick="clearSelection()" style="margin:5px 0;padding:5px 10px;width:100%;background: #ff6b6b;">清除选择状态</button>
+
+        <button onclick="clickNextButton()" style="margin:5px 0;padding:5px 10px;width:100%;">点击下一题按钮</button>
+        <button onclick="clickBackButton()" style="margin:5px 0;padding:5px 10px;width:100%;">点击上一题按钮</button>
+
+        <div class="test-log" id="test-log"></div>
+    </div>
+
+    <div id="background-layer"></div>
+    <canvas id="star-canvas"></canvas>
+
+    <div id="app">
+        <div id="start-screen" class="screen active">
+            <div class="container">
+                <h1>MBTI 人格测试</h1>
+                <p>下一题按钮禁用功能测试</p>
+                <button id="start-btn" type="button" class="primary-btn">开始测试</button>
+            </div>
+        </div>
+
+        <div id="question-screen" class="screen">
+            <div class="container">
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div class="question-header">
+                    <button id="back-btn" type="button" class="back-btn" disabled>← 上一题</button>
+                    <span id="question-number">1 / 92</span>
+                    <button id="next-btn" type="button" class="next-btn" disabled>下一题 →</button>
+                </div>
+                <div id="question-text" class="question-text"></div>
+                <div class="answer-options">
+                    <button class="option" data-score="1" type="button">
+                        <span class="label">非常不符合</span>
+                    </button>
+                    <button class="option" data-score="2" type="button">
+                        <span class="label">不太符合</span>
+                    </button>
+                    <button class="option" data-score="3" type="button">
+                        <span class="label">一般</span>
+                    </button>
+                    <button class="option" data-score="4" type="button">
+                        <span class="label">比较符合</span>
+                    </button>
+                    <button class="option" data-score="5" type="button">
+                        <span class="label">非常符合</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="container">
+                <h2>你的 MBTI 类型</h2>
+                <div id="mbti-type" class="mbti-type"></div>
+                <div id="percentages" class="percentages"></div>
+                <button id="restart-btn" type="button" class="secondary-btn">重新测试</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const log = document.getElementById('test-log');
+        const currentQSpan = document.getElementById('current-q');
+        const selectedScoreSpan = document.getElementById('selected-score');
+        const nextStatusSpan = document.getElementById('next-status');
+        const backStatusSpan = document.getElementById('back-status');
+
+        function addLog(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateStateInfo() {
+            if (window.app) {
+                const currentQ = window.app.currentQuestionIndex;
+                const selectedScore = window.app.selectedScore;
+                const nextDisabled = window.app.nextBtn?.disabled;
+                const backDisabled = window.app.backBtn?.disabled;
+
+                currentQSpan.textContent = currentQ + 1;
+                selectedScoreSpan.textContent = selectedScore !== undefined ? selectedScore : '-';
+
+                if (nextDisabled) {
+                    nextStatusSpan.innerHTML = '<span class="disabled-text">禁用</span>';
+                    nextStatusSpan.className = 'disabled-text';
+                } else {
+                    nextStatusSpan.innerHTML = '<span class="enabled-text">启用</span>';
+                    nextStatusSpan.className = 'enabled-text';
+                }
+
+                backStatusSpan.textContent = backDisabled ? '禁用' : '启用';
+            }
+        }
+
+        function simulateSelect(score) {
+            if (!window.app || window.app.questionScreen.classList.contains('active') === false) {
+                addLog('❌ 请先开始测试', 'error');
+                return;
+            }
+
+            addLog(`🎯 模拟选择分数: ${score}`, 'info');
+            window.app.selectAnswer(score);
+            setTimeout(updateStateInfo, 100);
+        }
+
+        function clearSelection() {
+            if (!window.app || window.app.questionScreen.classList.contains('active') === false) {
+                addLog('❌ 请先开始测试', 'error');
+                return;
+            }
+
+            addLog('🧹 清除选择状态', 'warning');
+            window.app.selectedScore = undefined;
+            window.app.updateNextButton();
+            window.app.answerOptions.forEach(option => option.classList.remove('selected'));
+            updateStateInfo();
+        }
+
+        function clickNextButton() {
+            const nextBtn = document.getElementById('next-btn');
+            if (nextBtn) {
+                if (nextBtn.disabled) {
+                    addLog('⚠️ 下一题按钮被禁用 - 无法跳转', 'warning');
+                } else {
+                    addLog('✅ 下一题按钮已启用 - 可以跳转', 'success');
+                    nextBtn.click();
+                }
+            }
+        }
+
+        function clickBackButton() {
+            const backBtn = document.getElementById('back-btn');
+            if (backBtn) {
+                if (backBtn.disabled) {
+                    addLog('⚠️ 上一题按钮被禁用', 'warning');
+                } else {
+                    addLog('⬅️ 点击上一题按钮', 'info');
+                    backBtn.click();
+                }
+            }
+        }
+
+        // 监控应用状态变化
+        setInterval(updateStateInfo, 500);
+
+        // 监听按钮点击
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                // 监听下一题按钮
+                const nextBtn = document.getElementById('next-btn');
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', () => {
+                        addLog('➡️ 下一题按钮被点击', 'success');
+                    });
+                }
+
+                // 监听选项点击
+                document.querySelectorAll('.option').forEach((option, index) => {
+                    option.addEventListener('click', () => {
+                        const score = index + 1;
+                        addLog(`🎯 用户选择了选项: ${score}分`, 'success');
+                        setTimeout(updateStateInfo, 100);
+                    });
+                });
+
+                addLog('🚀 测试页面已加载', 'success');
+                addLog('💡 请先点击"开始测试"，然后测试按钮禁用功能', 'info');
+            }, 1000);
+        });
+    </script>
+
+    <script src="mbti-core.js?v=20251129-1730"></script>
+    <script src="particles.js?v=20251129-1730"></script>
+    <script src="app.js?v=20251129-1730"></script>
+</body>
+</html>

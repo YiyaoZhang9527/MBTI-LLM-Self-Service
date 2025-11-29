@@ -16,6 +16,8 @@ class MBTIApp {
     this.resultScreen = document.getElementById('result-screen');
     this.startBtn = document.getElementById('start-btn');
     this.restartBtn = document.getElementById('restart-btn');
+    this.backBtn = document.getElementById('back-btn');
+    this.nextBtn = document.getElementById('next-btn');
     this.questionNumber = document.getElementById('question-number');
     this.questionText = document.getElementById('question-text');
     this.progressFill = document.getElementById('progress-fill');
@@ -27,6 +29,8 @@ class MBTIApp {
   bindEvents() {
     this.startBtn.addEventListener('click', () => this.startTest());
     this.restartBtn.addEventListener('click', () => this.restartTest());
+    this.backBtn.addEventListener('click', () => this.goBack());
+    this.nextBtn.addEventListener('click', () => this.goNext());
 
     this.answerOptions.forEach(option => {
       option.addEventListener('click', (e) => this.selectAnswer(e));
@@ -51,7 +55,7 @@ class MBTIApp {
       this.calculator.loadQuestions(this.questions);
     } catch (error) {
       console.error('Failed to load questions:', error);
-      alert('加载题目失败，请刷新页面重试');
+      this.showError('加载题目失败，请刷新页面重试');
     }
   }
 
@@ -62,7 +66,7 @@ class MBTIApp {
     console.log('前3个题目:', this.questions.slice(0, 3));
 
     if (this.questions.length === 0) {
-      alert('题目加载失败');
+      this.showError('题目加载失败');
       return;
     }
 
@@ -70,7 +74,7 @@ class MBTIApp {
     const hasInvalidQuestion = this.questions.some(q => !q.id || !q.dimension || !q.question);
     if (hasInvalidQuestion) {
       console.error('发现无效题目数据');
-      alert('题目数据不完整');
+      this.showError('题目数据不完整');
       return;
     }
 
@@ -89,8 +93,24 @@ class MBTIApp {
     const progress = ((this.currentQuestionIndex + 1) / this.questions.length) * 100;
     this.progressFill.style.width = `${progress}%`;
 
+    // Update back button state
+    this.updateBackButton();
+    this.updateNextButton();
+
     // Clear previous selection
     this.answerOptions.forEach(option => option.classList.remove('selected'));
+
+    // Restore previous answer if exists
+    if (this.answers[this.currentQuestionIndex]) {
+      const previousScore = this.answers[this.currentQuestionIndex].score;
+      const previousOption = document.querySelector(`[data-score="${previousScore}"]`);
+      if (previousOption) {
+        previousOption.classList.add('selected');
+      }
+      this.selectedScore = previousScore; // 恢复选择状态
+    } else {
+      this.selectedScore = undefined; // 清除选择状态
+    }
   }
 
   selectAnswer(event) {
@@ -125,6 +145,10 @@ class MBTIApp {
       return;
     }
 
+    // Store selected score and update UI
+    this.selectedScore = score;
+    this.updateNextButton();
+
     // Save answer
     const question = this.questions[this.currentQuestionIndex];
     if (!question) {
@@ -139,15 +163,19 @@ class MBTIApp {
     };
 
     console.log('保存答案:', answer);
-    this.answers.push(answer);
+    // Store answer by index (allows overwriting when going back)
+    this.answers[this.currentQuestionIndex] = answer;
 
     // Move to next question or show results
     setTimeout(() => {
       this.isProcessing = false;
+
       if (this.currentQuestionIndex < this.questions.length - 1) {
+        console.log(`📝 跳转到下一题: ${this.currentQuestionIndex + 1}/${this.questions.length}`);
         this.currentQuestionIndex++;
         this.showQuestion();
       } else {
+        console.log('🎉 答题完成，开始计算结果...');
         this.showResults();
       }
     }, 300);
@@ -157,12 +185,16 @@ class MBTIApp {
     console.log('答案数组:', this.answers);
     console.log('题目数量:', this.questions.length);
 
-    if (this.answers.length === 0) {
-      alert('没有答案数据');
+    // 过滤出有效的答案（不是undefined的）
+    const validAnswers = this.answers.filter(answer => answer !== undefined);
+    console.log('有效答案数量:', validAnswers.length);
+
+    if (validAnswers.length === 0) {
+      this.showError('没有答案数据');
       return;
     }
 
-    const scores = this.calculator.calculateScores(this.answers);
+    const scores = this.calculator.calculateScores(validAnswers);
     console.log('计算得分:', scores);
 
     const result = this.calculator.calculateResult(scores);
@@ -170,7 +202,7 @@ class MBTIApp {
 
     if (!result || !result.type || !result.percentages) {
       console.error('结果计算失败:', result);
-      alert('结果计算失败');
+      this.showError('结果计算失败');
       return;
     }
 
@@ -220,6 +252,7 @@ class MBTIApp {
     `;
 
     this.percentages.innerHTML = percentageHTML;
+    console.log('✨ 结果页面已准备，切换到结果屏幕...');
     this.showScreen('result-screen');
   }
 
@@ -227,12 +260,83 @@ class MBTIApp {
     this.showScreen('start-screen');
   }
 
+  showError(message) {
+    // 在开始按钮上显示错误
+    if (this.startBtn) {
+      this.startBtn.textContent = '❌ ' + message;
+      this.startBtn.style.background = '#ff4444';
+      this.startBtn.style.color = 'white';
+
+      // 3秒后恢复原状
+      setTimeout(() => {
+        this.startBtn.textContent = '开始测试';
+        this.startBtn.style.background = '';
+        this.startBtn.style.color = '';
+      }, 3000);
+    }
+
+    // 同时在控制台显示错误
+    console.error('MBTI错误:', message);
+  }
+
+  updateBackButton() {
+    if (this.currentQuestionIndex > 0) {
+      this.backBtn.disabled = false;
+    } else {
+      this.backBtn.disabled = true;
+    }
+  }
+
+  updateNextButton() {
+    // 如果是最后一题，禁用下一题按钮
+    if (this.currentQuestionIndex >= this.questions.length - 1) {
+      this.nextBtn.disabled = true;
+      this.nextBtn.textContent = '完成测试';
+    } else if (this.selectedScore !== undefined) {
+      // 已选择答案，启用下一题按钮
+      this.nextBtn.disabled = false;
+      this.nextBtn.textContent = '下一题 →';
+    } else {
+      // 未选择答案，禁用下一题按钮
+      this.nextBtn.disabled = true;
+      this.nextBtn.textContent = '下一题 →';
+    }
+  }
+
+  goNext() {
+    // 如果已经是最后一题，直接显示结果
+    if (this.currentQuestionIndex >= this.questions.length - 1) {
+      this.showResults();
+      return;
+    }
+
+    // 直接跳转到下一题，不检查是否已选择（作为便捷功能）
+    if (this.currentQuestionIndex < this.questions.length - 1 && !this.isProcessing) {
+      this.currentQuestionIndex++;
+      this.showQuestion();
+    }
+  }
+
+  goBack() {
+    if (this.currentQuestionIndex > 0 && !this.isProcessing) {
+      this.currentQuestionIndex--;
+      this.showQuestion();
+    }
+  }
+
   showScreen(screenId) {
+    console.log(`🖼️ 切换屏幕: ${screenId}`);
     this.startScreen.classList.remove('active');
     this.questionScreen.classList.remove('active');
     this.resultScreen.classList.remove('active');
 
-    document.getElementById(screenId).classList.add('active');
+    const targetScreen = document.getElementById(screenId);
+    if (targetScreen) {
+      targetScreen.classList.add('active');
+      console.log(`✅ 成功切换到屏幕: ${screenId}`);
+    } else {
+      console.error(`❌ 找不到目标屏幕: ${screenId}`);
+    }
   }
 }
 

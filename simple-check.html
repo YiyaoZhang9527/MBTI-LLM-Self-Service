@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单检查</title>
+    <link rel="stylesheet" href="style.css?v=20251129-1635">
+    <meta name="cache-control" content="no-cache, no-store, must-revalidate">
+    <style>
+        .debug {
+            position: fixed;
+            top: 5px;
+            right: 5px;
+            background: red;
+            color: white;
+            padding: 10px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug">调试层 - z-index: 9999</div>
+
+    <div id="background-layer">背景层 - z-index: -2</div>
+    <canvas id="star-canvas">画布层 - z-index: 1</canvas>
+
+    <div id="app">
+        <div id="start-screen" class="screen active">
+            <div class="container">
+                <h1 style="background: yellow; color: black;">MBTI 人格测试</h1>
+                <p style="background: orange; color: white;">专业版92题测试，发现真实的你</p>
+                <button id="start-btn" type="button" class="primary-btn" style="background: lime; color: black;">开始测试</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🔍 简单检查页面加载');
+        console.log('开始按钮:', document.getElementById('start-btn'));
+        console.log('开始屏幕:', document.getElementById('start-screen'));
+        console.log('开始屏幕活跃状态:', document.getElementById('start-screen')?.classList.contains('active'));
+    </script>
+
+    <script src="particles.js?v=20251129-1635"></script>
+</body>
+</html>

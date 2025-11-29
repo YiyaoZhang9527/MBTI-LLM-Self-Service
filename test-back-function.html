@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>回退功能测试</title>
+    <link rel="stylesheet" href="style.css?v=20251129-1640">
+    <meta name="cache-control" content="no-cache, no-store, must-revalidate">
+    <style>
+        .test-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            z-index: 9999;
+            max-width: 350px;
+            font-size: 12px;
+        }
+        .test-log {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .log-entry {
+            margin: 3px 0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .log-info { background: rgba(33, 150, 243, 0.2); }
+        .log-success { background: rgba(76, 175, 80, 0.2); }
+        .log-warning { background: rgba(255, 193, 7, 0.2); }
+        .current-state {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-panel">
+        <h3>🧪 回退功能测试</h3>
+        <div class="current-state" id="state-info">
+            <div>当前题号: <span id="current-q">-</span></div>
+            <div>答案数量: <span id="answer-count">0</span></div>
+            <div>回退按钮: <span id="back-status">-</span></div>
+        </div>
+        <button onclick="testBackFunction()" style="margin:5px 0;padding:5px 10px;width:100%;">手动测试回退</button>
+        <button onclick="showAnswers()" style="margin:5px 0;padding:5px 10px;width:100%;">查看答案数组</button>
+        <div class="test-log" id="test-log"></div>
+    </div>
+
+    <div id="background-layer"></div>
+    <canvas id="star-canvas"></canvas>
+
+    <div id="app">
+        <div id="start-screen" class="screen active">
+            <div class="container">
+                <h1>MBTI 人格测试</h1>
+                <p>回退功能测试版本</p>
+                <button id="start-btn" type="button" class="primary-btn">开始测试</button>
+            </div>
+        </div>
+
+        <div id="question-screen" class="screen">
+            <div class="container">
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div class="question-header">
+                    <button id="back-btn" type="button" class="back-btn" disabled>← 上一题</button>
+                    <span id="question-number">1 / 92</span>
+                </div>
+                <div id="question-text" class="question-text"></div>
+                <div class="answer-options">
+                    <button class="option" data-score="1" type="button">
+                        <span class="label">非常不符合</span>
+                    </button>
+                    <button class="option" data-score="2" type="button">
+                        <span class="label">不太符合</span>
+                    </button>
+                    <button class="option" data-score="3" type="button">
+                        <span class="label">一般</span>
+                    </button>
+                    <button class="option" data-score="4" type="button">
+                        <span class="label">比较符合</span>
+                    </button>
+                    <button class="option" data-score="5" type="button">
+                        <span class="label">非常符合</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="container">
+                <h2>你的 MBTI 类型</h2>
+                <div id="mbti-type" class="mbti-type"></div>
+                <div id="percentages" class="percentages"></div>
+                <button id="restart-btn" type="button" class="secondary-btn">重新测试</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const log = document.getElementById('test-log');
+        const currentQSpan = document.getElementById('current-q');
+        const answerCountSpan = document.getElementById('answer-count');
+        const backStatusSpan = document.getElementById('back-status');
+
+        function addLog(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateStateInfo() {
+            if (window.app) {
+                const currentQ = window.app.currentQuestionIndex;
+                const answerCount = window.app.answers.filter(a => a !== undefined).length;
+                const backDisabled = window.app.backBtn?.disabled;
+
+                currentQSpan.textContent = currentQ;
+                answerCountSpan.textContent = answerCount;
+                backStatusSpan.textContent = backDisabled ? '禁用' : '启用';
+            }
+        }
+
+        function testBackFunction() {
+            if (!window.app) {
+                addLog('❌ 应用未初始化', 'warning');
+                return;
+            }
+
+            addLog('🧪 开始测试回退功能', 'info');
+
+            // 模拟答题流程
+            if (window.app.currentQuestionIndex === 0) {
+                addLog('请先答几道题再测试回退', 'warning');
+                return;
+            }
+
+            // 测试回退
+            const beforeBack = window.app.currentQuestionIndex;
+            window.app.goBack();
+            const afterBack = window.app.currentQuestionIndex;
+
+            if (afterBack < beforeBack) {
+                addLog(`✅ 回退成功: ${beforeBack} → ${afterBack}`, 'success');
+            } else {
+                addLog(`❌ 回退失败: ${beforeBack} → ${afterBack}`, 'warning');
+            }
+
+            updateStateInfo();
+        }
+
+        function showAnswers() {
+            if (window.app) {
+                addLog(`📝 答案数组: ${JSON.stringify(window.app.answers)}`, 'info');
+                addLog(`📊 当前题号: ${window.app.currentQuestionIndex}`, 'info');
+            }
+        }
+
+        // 监控应用状态变化
+        setInterval(updateStateInfo, 500);
+
+        // 监听按钮点击
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const backBtn = document.getElementById('back-btn');
+                if (backBtn) {
+                    backBtn.addEventListener('click', () => {
+                        addLog('🔄 回退按钮被点击', 'info');
+                    });
+                }
+
+                // 监听选项点击
+                document.querySelectorAll('.option').forEach(option => {
+                    option.addEventListener('click', () => {
+                        addLog('✅ 答案选项被点击', 'success');
+                    });
+                });
+
+                addLog('🚀 测试页面已加载', 'success');
+            }, 1000);
+        });
+    </script>
+
+    <script src="mbti-core.js?v=20251129-1640"></script>
+    <script src="particles.js?v=20251129-1640"></script>
+    <script src="app.js?v=20251129-1640"></script>
+</body>
+</html>

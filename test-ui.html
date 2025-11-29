@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI测试 - MBTI星空背景</title>
+    <meta name="cache-control" content="no-cache, no-store, must-revalidate">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20251129-1635">
+    <style>
+        .test-overlay {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            z-index: 9999;
+            max-width: 300px;
+        }
+        .test-item {
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #FF5252; }
+    </style>
+</head>
+<body>
+    <div class="test-overlay">
+        <h3>🧪 UI组件测试</h3>
+        <div id="test-results"></div>
+        <button onclick="location.reload()" style="margin-top:10px;padding:5px 10px;">重新测试</button>
+    </div>
+
+    <div id="background-layer"></div>
+    <canvas id="star-canvas"></canvas>
+
+    <div class="container">
+        <h1 style="font-family: 'Playfair Display', serif; color: var(--primary-color);">星空UI测试</h1>
+        <p style="font-family: 'Lato', sans-serif;">检查所有新UI组件</p>
+
+        <button type="button" class="primary-btn">测试按钮</button>
+        <button type="button" class="secondary-btn">次要按钮</button>
+    </div>
+
+    <script>
+        const results = document.getElementById('test-results');
+
+        function addTest(name, success, message = '') {
+            const item = document.createElement('div');
+            item.className = `test-item ${success ? 'success' : 'error'}`;
+            item.innerHTML = `${success ? '✅' : '❌'} ${name}${message ? ': ' + message : ''}`;
+            results.appendChild(item);
+        }
+
+        // 测试CSS变量
+        const style = getComputedStyle(document.documentElement);
+        addTest('CSS变量定义',
+            style.getPropertyValue('--primary-color').trim() !== '',
+            style.getPropertyValue('--primary-color').trim()
+        );
+
+        // 测试字体加载
+        const testFont = new FontFace('Lato', 'url(https://fonts.gstatic.com/s/lato/v24/S6uyw4BMUTPHjx4wXiWtFCc.woff2)');
+        testFont.load().then(loaded => {
+            addTest('Lato字体', true, '已加载');
+        }).catch(() => {
+            addTest('Lato字体', false, '加载失败');
+        });
+
+        // 测试Canvas
+        setTimeout(() => {
+            const canvas = document.getElementById('star-canvas');
+            const bgLayer = document.getElementById('background-layer');
+
+            addTest('Canvas元素', !!canvas);
+            addTest('背景层元素', !!bgLayer);
+            addTest('Canvas尺寸', canvas && canvas.width > 0 && canvas.height > 0);
+
+            // 检查Canvas是否有内容
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                const hasContent = ctx.getImageData(0, 0, 1, 1).data[3] > 0;
+                setTimeout(() => {
+                    addTest('粒子动画', hasContent, hasContent ? '检测到粒子' : '未检测到');
+                }, 2000);
+            }
+        }, 100);
+
+        // 测试粒子系统脚本
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const hasParticles = document.querySelector('canvas[width][height]');
+                addTest('粒子系统脚本', hasParticles);
+            }, 1000);
+        });
+
+        // 检查背景样式
+        setTimeout(() => {
+            const bodyStyle = window.getComputedStyle(document.body);
+            const hasBackground = bodyStyle.backgroundColor && bodyStyle.backgroundColor !== 'rgba(0, 0, 0, 0)';
+            addTest('背景样式', hasBackground, hasBackground ? bodyStyle.backgroundColor : '未设置');
+        }, 500);
+    </script>
+
+    <script src="particles.js?v=20251129-1627"></script>
+</body>
+</html>

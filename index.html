@@ -1,18 +1,30 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MBTI 人格测试</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20251129-1900">
+    <meta name="cache-control" content="no-cache, no-store, must-revalidate">
+    <meta name="pragma" content="no-cache">
+    <meta name="expires" content="0">
 </head>
+
 <body>
+    <div id="background-layer"></div>
+    <canvas id="star-canvas"></canvas>
     <div id="app">
         <div id="start-screen" class="screen active">
             <div class="container">
                 <h1>MBTI 人格测试</h1>
                 <p>专业版92题测试，发现真实的你</p>
-                <button id="start-btn" class="primary-btn">开始测试</button>
+                <button id="start-btn" type="button" class="primary-btn">开始测试</button>
             </div>
         </div>
 
@@ -22,25 +34,27 @@
                     <div id="progress-fill" class="progress-fill"></div>
                 </div>
                 <div class="question-header">
+                    <button id="back-btn" type="button" class="back-btn" disabled>← 上一题</button>
                     <span id="question-number">1 / 92</span>
+                    <button id="next-btn" type="button" class="next-btn" disabled>下一题 →</button>
                 </div>
                 <div id="question-text" class="question-text"></div>
                 <div class="answer-options">
-                    <div class="option" data-score="1">
+                    <button class="option" data-score="1" type="button">
                         <span class="label">非常不符合</span>
-                    </div>
-                    <div class="option" data-score="2">
+                    </button>
+                    <button class="option" data-score="2" type="button">
                         <span class="label">不太符合</span>
-                    </div>
-                    <div class="option" data-score="3">
+                    </button>
+                    <button class="option" data-score="3" type="button">
                         <span class="label">一般</span>
-                    </div>
-                    <div class="option" data-score="4">
+                    </button>
+                    <button class="option" data-score="4" type="button">
                         <span class="label">比较符合</span>
-                    </div>
-                    <div class="option" data-score="5">
+                    </button>
+                    <button class="option" data-score="5" type="button">
                         <span class="label">非常符合</span>
-                    </div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -50,12 +64,14 @@
                 <h2>你的 MBTI 类型</h2>
                 <div id="mbti-type" class="mbti-type"></div>
                 <div id="percentages" class="percentages"></div>
-                <button id="restart-btn" class="secondary-btn">重新测试</button>
+                <button id="restart-btn" type="button" class="secondary-btn">重新测试</button>
             </div>
         </div>
     </div>
 
-    <script src="mbti-core.js"></script>
-    <script src="app.js"></script>
+    <script src="mbti-core.js?v=20251129-2000"></script>
+    <script src="particles.js?v=20251129-1900"></script>
+    <script src="app.js?v=20251129-1900"></script>
 </body>
+
 </html>

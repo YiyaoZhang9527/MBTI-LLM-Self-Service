@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI计算逻辑测试</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1A2332;
+            color: #F5F3F0;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #7B9B87;
+        }
+        .error {
+            border-left-color: #ff6b6b;
+            background: rgba(255,107,107,0.1);
+        }
+        .success {
+            border-left-color: #4caf50;
+            background: rgba(76,175,80,0.1);
+        }
+        .result {
+            background: #2A3651;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        button {
+            background: #7B9B87;
+            color: #1A2332;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #4F6D5C;
+        }
+        .test-case {
+            background: rgba(255,255,255,0.02);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧮 MBTI分数计算逻辑测试</h1>
+
+    <div class="test-section">
+        <h3>✅ 发现的关键问题</h3>
+        <p><strong>原算法错误</strong>：每道题同时加到两个维度上，导致重复计算</p>
+        <p><strong>例如</strong>：E题3分会同时加到E和I，这是完全错误的</p>
+        <p><strong>正确逻辑</strong>：E题只加到E，I题只加到I，通过比较得出倾向</p>
+    </div>
+
+    <div class="test-section">
+        <h3>🧪 测试用例</h3>
+        <button onclick="testCalculation()">运行所有测试</button>
+        <button onclick="testCase1()">测试用例1：纯E倾向</button>
+        <button onclick="testCase2()">测试用例2：纯I倾向</button>
+        <button onclick="testCase3()">测试用例3：平衡倾向</button>
+        <div id="test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>📊 实际计算结果</h3>
+        <button onclick="loadRealData()">加载真实题目数据</button>
+        <button onclick="simulateAnswers()">模拟答题数据</button>
+        <div id="real-results"></div>
+    </div>
+
+    <script src="mbti-core.js?v=20251129-1800"></script>
+    <script>
+        let calculator;
+        let questions = [];
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            calculator = new MBTICalculator();
+            await loadQuestions();
+        });
+
+        async function loadQuestions() {
+            try {
+                const response = await fetch('questions.csv');
+                const csvText = await response.text();
+                questions = parseCSV(csvText);
+                calculator.loadQuestions(questions);
+                addLog('✅ 题目数据加载完成', 'success');
+                addLog(`📝 总共${questions.length}道题`);
+
+                // 显示题目分布
+                const distribution = analyzeDistribution(questions);
+                addLog(`📊 题目分布: ${JSON.stringify(distribution)}`);
+            } catch (error) {
+                addLog(`❌ 加载题目失败: ${error.message}`, 'error');
+            }
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',');
+            const questions = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+
+                const values = lines[i].split(',');
+                if (values.length >= 4) {
+                    questions.push({
+                        id: parseInt(values[0]),
+                        dimension: values[1],
+                        question: values[2],
+                        reverse: values[3].toLowerCase() === 'true'
+                    });
+                }
+            }
+
+            return questions;
+        }
+
+        function analyzeDistribution(questions) {
+            const distribution = {};
+            questions.forEach(q => {
+                if (!distribution[q.dimension]) {
+                    distribution[q.dimension] = { forward: 0, reverse: 0 };
+                }
+                if (q.reverse) {
+                    distribution[q.dimension].reverse++;
+                } else {
+                    distribution[q.dimension].forward++;
+                }
+            });
+            return distribution;
+        }
+
+        function addLog(message, type = 'info') {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `test-case ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+            console.log(message);
+        }
+
+        function testCalculation() {
+            addLog('🧪 开始执行所有测试用例...', 'info');
+            testCase1();
+            testCase2();
+            testCase3();
+            addLog('✅ 所有测试用例执行完成', 'success');
+        }
+
+        function testCase1() {
+            addLog('🧪 测试用例1：纯E倾向', 'info');
+
+            // 模拟所有E题都选5分，所有I题都选1分
+            const answers = [];
+            questions.forEach((q, index) => {
+                if (q.dimension === 'EI') {
+                    if (q.reverse) {
+                        // I题，选择1分(最不I倾向)
+                        answers.push({ questionId: q.id, score: 1 });
+                    } else {
+                        // E题，选择5分(最E倾向)
+                        answers.push({ questionId: q.id, score: 5 });
+                    }
+                }
+            });
+
+            const scores = calculator.calculateScores(answers);
+            const result = calculator.calculateResult(scores);
+
+            addLog(`E分数: ${scores.E}, I分数: ${scores.I}`);
+            addLog(`结果类型: ${result.type}`);
+
+            // 验证结果
+            if (result.type.startsWith('E')) {
+                addLog('✅ 测试用例1通过：纯E倾向结果正确', 'success');
+            } else {
+                addLog(`❌ 测试用例1失败：期望E开头，得到${result.type}`, 'error');
+            }
+        }
+
+        function testCase2() {
+            addLog('🧪 测试用例2：纯I倾向', 'info');
+
+            // 模拟所有E题都选1分，所有I题都选5分
+            const answers = [];
+            questions.forEach((q, index) => {
+                if (q.dimension === 'EI') {
+                    if (q.reverse) {
+                        // I题，选择5分(最I倾向)
+                        answers.push({ questionId: q.id, score: 5 });
+                    } else {
+                        // E题，选择1分(最不E倾向)
+                        answers.push({ questionId: q.id, score: 1 });
+                    }
+                }
+            });
+
+            const scores = calculator.calculateScores(answers);
+            const result = calculator.calculateResult(scores);
+
+            addLog(`E分数: ${scores.E}, I分数: ${scores.I}`);
+            addLog(`结果类型: ${result.type}`);
+
+            // 验证结果
+            if (result.type.startsWith('I')) {
+                addLog('✅ 测试用例2通过：纯I倾向结果正确', 'success');
+            } else {
+                addLog(`❌ 测试用例2失败：期望I开头，得到${result.type}`, 'error');
+            }
+        }
+
+        function testCase3() {
+            addLog('🧪 测试用例3：平衡倾向', 'info');
+
+            // 模拟所有题目都选3分(中性)
+            const answers = [];
+            questions.forEach((q, index) => {
+                answers.push({ questionId: q.id, score: 3 });
+            });
+
+            const scores = calculator.calculateScores(answers);
+            const result = calculator.calculateResult(scores);
+
+            addLog(`E分数: ${scores.E}, I分数: ${scores.I}`);
+            addLog(`结果类型: ${result.type}`);
+            addLog(`EI百分比: E=${result.percentages.EI.E}%, I=${result.percentages.EI.I}%`);
+
+            // 中性应该接近50:50
+            const ePercentage = result.percentages.EI.E;
+            if (Math.abs(ePercentage - 50) <= 10) {
+                addLog('✅ 测试用例3通过：平衡倾向结果正确', 'success');
+            } else {
+                addLog(`❌ 测试用例3警告：期望接近50%，得到E=${ePercentage}%`, 'error');
+            }
+        }
+
+        function simulateAnswers() {
+            addLog('🎲 模拟随机答题数据...', 'info');
+
+            const answers = [];
+            questions.forEach((q, index) => {
+                // 随机生成1-5分的答案
+                const score = Math.floor(Math.random() * 5) + 1;
+                answers.push({ questionId: q.id, score });
+            });
+
+            const scores = calculator.calculateScores(answers);
+            const result = calculator.calculateResult(scores);
+
+            const realResults = document.getElementById('real-results');
+            realResults.innerHTML = `
+                <div class="result">
+                    <h4>📊 随机答题结果</h4>
+                    <p><strong>MBTI类型:</strong> ${result.type}</p>
+                    <div class="result">
+                        <strong>EI维度:</strong> E=${scores.E} (${result.percentages.EI.E}%) / I=${scores.I} (${result.percentages.EI.I}%)<br>
+                        <strong>SN维度:</strong> S=${scores.S} (${result.percentages.SN.S}%) / N=${scores.N} (${result.percentages.SN.N}%)<br>
+                        <strong>TF维度:</strong> T=${scores.T} (${result.percentages.TF.T}%) / F=${scores.F} (${result.percentages.TF.F}%)<br>
+                        <strong>JP维度:</strong> J=${scores.J} (${result.percentages.JP.J}%) / P=${scores.P} (${result.percentages.JP.P}%)
+                    </div>
+                </div>
+            `;
+
+            addLog(`🎯 随机答题结果: ${result.type}`);
+            addLog(`📈 E=${result.percentages.EI.E}% I=${result.percentages.EI.I}% S=${result.percentages.SN.S}% N=${result.percentages.SN.N}% T=${result.percentages.TF.T}% F=${result.percentages.TF.F}% J=${result.percentages.JP.J}% P=${result.percentages.JP.P}%`);
+        }
+    </script>
+</body>
+</html>
