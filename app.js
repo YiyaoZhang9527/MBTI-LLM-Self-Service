@@ -6,6 +6,9 @@ class MBTIApp {
     this.answers = [];
     this.isProcessing = false;
 
+    // 添加测试数据记录器
+    this.dataRecorder = new TestDataRecorder();
+
     this.initElements();
     this.bindEvents();
   }
@@ -24,6 +27,17 @@ class MBTIApp {
     this.answerOptions = document.querySelectorAll('.option');
     this.mbtiType = document.getElementById('mbti-type');
     this.percentages = document.getElementById('percentages');
+
+    // 测试详细信息相关元素
+    this.testDetails = document.getElementById('test-details');
+    this.toggleDetailsBtn = document.getElementById('toggle-details-btn');
+    this.detailedStats = document.getElementById('detailed-stats');
+    this.saveInfoBtn = document.getElementById('save-info-btn');
+    this.exportCsvBtn = document.getElementById('export-csv-btn');
+    this.exportMdBtn = document.getElementById('export-md-btn');
+    this.userEmail = document.getElementById('user-email');
+    this.userJob = document.getElementById('user-job');
+    this.userAge = document.getElementById('user-age');
   }
 
   bindEvents() {
@@ -35,6 +49,12 @@ class MBTIApp {
     this.answerOptions.forEach(option => {
       option.addEventListener('click', (e) => this.selectAnswer(e));
     });
+
+    // 测试详细信息相关事件
+    this.toggleDetailsBtn.addEventListener('click', () => this.toggleTestDetails());
+    this.saveInfoBtn.addEventListener('click', () => this.saveOptionalInfo());
+    this.exportCsvBtn.addEventListener('click', () => this.exportToCSV());
+    this.exportMdBtn.addEventListener('click', () => this.exportMarkdown());
 
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
@@ -78,6 +98,10 @@ class MBTIApp {
       return;
     }
 
+    // 开始数据记录
+    this.dataRecorder.startTest();
+    this.dataRecorder.fetchIpAddress(); // 异步获取IP
+
     this.answers = [];
     this.currentQuestionIndex = 0;
     this.showQuestion();
@@ -86,6 +110,15 @@ class MBTIApp {
 
   showQuestion() {
     const question = this.questions[this.currentQuestionIndex];
+
+    // 结束上一题的记录
+    if (this.currentQuestionIndex > 0) {
+      const prevQuestion = this.questions[this.currentQuestionIndex - 1];
+      this.dataRecorder.endQuestion(prevQuestion.id);
+    }
+
+    // 开始记录当前题目
+    this.dataRecorder.startQuestion(question.id, question.question);
 
     this.questionNumber.textContent = `${this.currentQuestionIndex + 1} / ${this.questions.length}`;
     this.questionText.textContent = question.question;
@@ -166,6 +199,9 @@ class MBTIApp {
     // Store answer by index (allows overwriting when going back)
     this.answers[this.currentQuestionIndex] = answer;
 
+    // 记录用户选择
+    this.dataRecorder.recordSelection(question.id, score);
+
     // Move to next question or show results
     setTimeout(() => {
       this.isProcessing = false;
@@ -184,6 +220,15 @@ class MBTIApp {
   showResults() {
     console.log('答案数组:', this.answers);
     console.log('题目数量:', this.questions.length);
+
+    // 结束最后一题的记录
+    if (this.currentQuestionIndex >= 0 && this.questions[this.currentQuestionIndex]) {
+      this.dataRecorder.endQuestion(this.questions[this.currentQuestionIndex].id);
+    }
+
+    // 完成测试记录
+    const testData = this.dataRecorder.completeTest();
+    console.log('📊 完整测试数据:', testData);
 
     // 过滤出有效的答案（不是undefined的）
     const validAnswers = this.answers.filter(answer => answer !== undefined);
@@ -205,6 +250,13 @@ class MBTIApp {
       this.showError('结果计算失败');
       return;
     }
+
+    // 存储测试数据供后续使用
+    this.currentTestData = testData;
+    this.currentResult = result;
+
+    // 记录MBTI测试结果到数据记录器
+    this.dataRecorder.recordMBTIResult(result);
 
     this.mbtiType.textContent = result.type;
 
@@ -254,6 +306,119 @@ class MBTIApp {
     this.percentages.innerHTML = percentageHTML;
     console.log('✨ 结果页面已准备，切换到结果屏幕...');
     this.showScreen('result-screen');
+  }
+
+  // 切换测试详细信息显示
+  toggleTestDetails() {
+    if (this.testDetails.style.display === 'none' || !this.testDetails.style.display) {
+      this.showTestDetails();
+      this.testDetails.style.display = 'block';
+      this.toggleDetailsBtn.textContent = '隐藏测试详情';
+    } else {
+      this.testDetails.style.display = 'none';
+      this.toggleDetailsBtn.textContent = '查看测试详情';
+    }
+  }
+
+  // 显示测试详细统计
+  showTestDetails() {
+    if (!this.currentTestData) return;
+
+    const stats = this.dataRecorder.getDetailedStats();
+
+    const statsHTML = `
+      <div class="stats-grid">
+        <div class="stat-item stat-highlight">
+          <div class="stat-label">测试ID</div>
+          <div class="stat-value">${stats.testId}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">总测试时长</div>
+          <div class="stat-value">${stats.totalDuration}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">答题数量</div>
+          <div class="stat-value">${stats.questionCount}题</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">平均答题时间</div>
+          <div class="stat-value">${stats.averageStayTime}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">总修改次数</div>
+          <div class="stat-value">${stats.totalChanges}次</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">完成率</div>
+          <div class="stat-value">${stats.completionRate.toFixed(1)}%</div>
+        </div>
+      </div>
+      ${stats.fastestQuestion ? `
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">最快答题</div>
+            <div class="stat-value">题目${stats.fastestQuestion.questionId} (${stats.fastestQuestion.time})</div>
+          </div>
+          ${stats.slowestQuestion ? `
+            <div class="stat-item">
+              <div class="stat-label">最慢答题</div>
+              <div class="stat-value">题目${stats.slowestQuestion.questionId} (${stats.slowestQuestion.time})</div>
+            </div>
+          ` : ''}
+          ${stats.mostChangedQuestion ? `
+            <div class="stat-item">
+              <div class="stat-label">修改最多</div>
+              <div class="stat-value">题目${stats.mostChangedQuestion.questionId} (${stats.mostChangedQuestion.changes}次)</div>
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
+    `;
+
+    this.detailedStats.innerHTML = statsHTML;
+  }
+
+  // 保存可选信息
+  saveOptionalInfo() {
+    const email = this.userEmail.value.trim();
+    const jobTitle = this.userJob.value.trim();
+    const age = this.userAge.value.trim();
+
+    this.dataRecorder.recordOptionalInfo(email, jobTitle, age);
+
+    // 显示保存成功提示
+    this.saveInfoBtn.textContent = '✅ 已保存';
+    this.saveInfoBtn.disabled = true;
+
+    setTimeout(() => {
+      this.saveInfoBtn.textContent = '保存信息';
+      this.saveInfoBtn.disabled = false;
+    }, 2000);
+
+    console.log('📝 保存用户信息:', { email, jobTitle, age });
+  }
+
+  
+  // 导出CSV
+  exportToCSV() {
+    if (!this.currentTestData) {
+      alert('没有测试数据可导出');
+      return;
+    }
+
+    this.dataRecorder.exportToCSV();
+    console.log('📊 CSV导出完成');
+  }
+
+  // 导出Markdown分析报告
+  exportMarkdown() {
+    if (!this.currentTestData) {
+      alert('没有测试数据可导出');
+      return;
+    }
+
+    this.dataRecorder.exportToMarkdown();
+    console.log('📄 分析报告导出完成');
   }
 
   restartTest() {

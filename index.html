@@ -64,14 +64,49 @@
                 <h2>你的 MBTI 类型</h2>
                 <div id="mbti-type" class="mbti-type"></div>
                 <div id="percentages" class="percentages"></div>
+
+                <!-- 测试详细信息 -->
+                <div id="test-details" class="test-details" style="display: none;">
+                    <h3>📊 测试详细统计</h3>
+                    <div id="detailed-stats" class="detailed-stats"></div>
+
+                    <div class="optional-info-section">
+                        <h4>可选信息（用于数据分析）</h4>
+                        <div class="optional-form">
+                            <div class="form-group">
+                                <label for="user-email">邮箱：</label>
+                                <input type="email" id="user-email" placeholder="选填">
+                            </div>
+                            <div class="form-group">
+                                <label for="user-job">工作岗位：</label>
+                                <input type="text" id="user-job" placeholder="选填">
+                            </div>
+                            <div class="form-group">
+                                <label for="user-age">年龄：</label>
+                                <input type="number" id="user-age" min="1" max="120" placeholder="选填">
+                            </div>
+                            <div class="form-buttons">
+                                <button id="save-info-btn" type="button" class="primary-btn">保存信息</button>
+                            </div>
+
+                            <div class="form-buttons">
+                                <button id="export-csv-btn" type="button" class="secondary-btn">导出测试行为表</button>
+                                <button id="export-md-btn" type="button" class="secondary-btn">导出分析模版</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <button id="restart-btn" type="button" class="secondary-btn">重新测试</button>
+                <button id="toggle-details-btn" type="button" class="info-btn">查看测试详情</button>
             </div>
         </div>
     </div>
 
     <script src="mbti-core.js?v=20251129-2000"></script>
+    <script src="test-data-recorder.js?v=20251129-2100"></script>
     <script src="particles.js?v=20251129-1900"></script>
-    <script src="app.js?v=20251129-1900"></script>
+    <script src="app.js?v=20251129-2100"></script>
 </body>
 
 </html>
