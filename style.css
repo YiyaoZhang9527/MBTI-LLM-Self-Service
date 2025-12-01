@@ -648,9 +648,175 @@ body {
     border-radius: 4px;
     overflow-x: auto;
     font-size: 0.8rem;
-    color: #00ff00;
+    color: var(--primary-color);
     white-space: pre-wrap;
     word-wrap: break-word;
+}
+
+/* 新的结果页面布局样式 */
+.test-stats-section {
+    margin: 30px 0;
+    padding: 25px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.test-stats-section h3 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(245, 208, 32, 0.5);
+}
+
+/* 可选信息部分样式优化 */
+.optional-info-section {
+    margin: 30px 0;
+    padding: 25px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.optional-info-section h3 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(245, 208, 32, 0.5);
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.form-group {
+    flex: 1;
+    min-width: 200px;
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    color: #fff;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(245, 208, 32, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+}
+
+/* 功能说明框样式 */
+.function-info-section {
+    margin: 25px 0;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    border: 1px solid rgba(245, 208, 32, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.info-text {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    font-family: var(--font-body);
+}
+
+/* 操作按钮组样式 */
+.action-buttons-section {
+    margin: 40px 0 20px;
+    text-align: center;
+}
+
+.action-buttons-row {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.action-buttons-row button {
+    flex: 1;
+    min-width: 180px;
+    max-width: 220px;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+
+.secondary-btn {
+    background: linear-gradient(45deg, var(--primary-color), var(--primary-hover));
+    color: #0B1026;
+    box-shadow: 0 4px 15px rgba(245, 208, 32, 0.3);
+}
+
+.secondary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 208, 32, 0.4);
 }
 
 /* 响应式设计 */
@@ -675,5 +841,52 @@ body {
 
     .csv-preview pre {
         font-size: 0.7rem;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .action-buttons-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .action-buttons-row button {
+        width: 100%;
+        max-width: 300px;
+        min-width: auto;
+    }
+
+    .test-stats-section,
+    .optional-info-section {
+        margin: 20px 0;
+        padding: 20px 15px;
+    }
+
+    .form-group {
+        min-width: auto;
+    }
+
+    .function-info-section {
+        margin: 20px 0;
+        padding: 15px;
+    }
+
+    .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px 0;
+    }
+
+    .info-icon {
+        margin-top: 0;
+    }
+
+    .info-text {
+        font-size: 0.85rem;
     }
 }

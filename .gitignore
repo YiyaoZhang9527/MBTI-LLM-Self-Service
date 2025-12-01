@@ -61,3 +61,16 @@ test.html
 *Key*
 Electerm-key*
 MacbookPro14*
+
+# Environment variables with API keys
+.env
+*.env
+.env.local
+.env.production
+
+# Output files with test data
+backend/output/
+*.png
+*.json
+mbti_result_*
+mbti_test_report_*

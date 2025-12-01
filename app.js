@@ -28,10 +28,7 @@ class MBTIApp {
     this.mbtiType = document.getElementById('mbti-type');
     this.percentages = document.getElementById('percentages');
 
-    // 测试详细信息相关元素
-    this.testDetails = document.getElementById('test-details');
-    this.toggleDetailsBtn = document.getElementById('toggle-details-btn');
-    this.detailedStats = document.getElementById('detailed-stats');
+    // 测试信息相关元素
     this.saveInfoBtn = document.getElementById('save-info-btn');
     this.exportCsvBtn = document.getElementById('export-csv-btn');
     this.exportMdBtn = document.getElementById('export-md-btn');
@@ -51,7 +48,7 @@ class MBTIApp {
     });
 
     // 测试详细信息相关事件
-    this.toggleDetailsBtn.addEventListener('click', () => this.toggleTestDetails());
+    // 移除了切换详情按钮，现在直接显示详情
     this.saveInfoBtn.addEventListener('click', () => this.saveOptionalInfo());
     this.exportCsvBtn.addEventListener('click', () => this.exportToCSV());
     this.exportMdBtn.addEventListener('click', () => this.exportMarkdown());
@@ -306,78 +303,14 @@ class MBTIApp {
     this.percentages.innerHTML = percentageHTML;
     console.log('✨ 结果页面已准备，切换到结果屏幕...');
     this.showScreen('result-screen');
+
+    // 直接显示测试详细统计
+    this.showTestDetails();
   }
 
-  // 切换测试详细信息显示
-  toggleTestDetails() {
-    if (this.testDetails.style.display === 'none' || !this.testDetails.style.display) {
-      this.showTestDetails();
-      this.testDetails.style.display = 'block';
-      this.toggleDetailsBtn.textContent = '隐藏测试详情';
-    } else {
-      this.testDetails.style.display = 'none';
-      this.toggleDetailsBtn.textContent = '查看测试详情';
-    }
-  }
+  // 移除了toggleTestDetails函数，现在详情直接显示
 
-  // 显示测试详细统计
-  showTestDetails() {
-    if (!this.currentTestData) return;
-
-    const stats = this.dataRecorder.getDetailedStats();
-
-    const statsHTML = `
-      <div class="stats-grid">
-        <div class="stat-item stat-highlight">
-          <div class="stat-label">测试ID</div>
-          <div class="stat-value">${stats.testId}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">总测试时长</div>
-          <div class="stat-value">${stats.totalDuration}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">答题数量</div>
-          <div class="stat-value">${stats.questionCount}题</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">平均答题时间</div>
-          <div class="stat-value">${stats.averageStayTime}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">总修改次数</div>
-          <div class="stat-value">${stats.totalChanges}次</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">完成率</div>
-          <div class="stat-value">${stats.completionRate.toFixed(1)}%</div>
-        </div>
-      </div>
-      ${stats.fastestQuestion ? `
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-label">最快答题</div>
-            <div class="stat-value">题目${stats.fastestQuestion.questionId} (${stats.fastestQuestion.time})</div>
-          </div>
-          ${stats.slowestQuestion ? `
-            <div class="stat-item">
-              <div class="stat-label">最慢答题</div>
-              <div class="stat-value">题目${stats.slowestQuestion.questionId} (${stats.slowestQuestion.time})</div>
-            </div>
-          ` : ''}
-          ${stats.mostChangedQuestion ? `
-            <div class="stat-item">
-              <div class="stat-label">修改最多</div>
-              <div class="stat-value">题目${stats.mostChangedQuestion.questionId} (${stats.mostChangedQuestion.changes}次)</div>
-            </div>
-          ` : ''}
-        </div>
-      ` : ''}
-    `;
-
-    this.detailedStats.innerHTML = statsHTML;
-  }
-
+  
   // 保存可选信息
   saveOptionalInfo() {
     const email = this.userEmail.value.trim();

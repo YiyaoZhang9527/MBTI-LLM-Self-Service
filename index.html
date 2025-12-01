@@ -10,7 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20251129-1900">
+    <link rel="stylesheet" href="style.css?v=20251201-1205">
     <meta name="cache-control" content="no-cache, no-store, must-revalidate">
     <meta name="pragma" content="no-cache">
     <meta name="expires" content="0">
@@ -65,40 +65,54 @@
                 <div id="mbti-type" class="mbti-type"></div>
                 <div id="percentages" class="percentages"></div>
 
-                <!-- 测试详细信息 -->
-                <div id="test-details" class="test-details" style="display: none;">
-                    <h3>📊 测试详细统计</h3>
-                    <div id="detailed-stats" class="detailed-stats"></div>
-
-                    <div class="optional-info-section">
-                        <h4>可选信息（用于数据分析）</h4>
-                        <div class="optional-form">
+                <!-- 可选信息部分 -->
+                <div class="optional-info-section">
+                    <h3>📝 可选信息（用于数据分析）</h3>
+                    <div class="optional-form">
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="user-email">邮箱：</label>
-                                <input type="email" id="user-email" placeholder="选填">
+                                <input type="email" id="user-email" placeholder="选填，用于接收分析报告">
                             </div>
                             <div class="form-group">
                                 <label for="user-job">工作岗位：</label>
-                                <input type="text" id="user-job" placeholder="选填">
+                                <input type="text" id="user-job" placeholder="选填，如：软件工程师">
                             </div>
                             <div class="form-group">
                                 <label for="user-age">年龄：</label>
                                 <input type="number" id="user-age" min="1" max="120" placeholder="选填">
                             </div>
-                            <div class="form-buttons">
-                                <button id="save-info-btn" type="button" class="primary-btn">保存信息</button>
-                            </div>
-
-                            <div class="form-buttons">
-                                <button id="export-csv-btn" type="button" class="secondary-btn">导出测试行为表</button>
-                                <button id="export-md-btn" type="button" class="secondary-btn">导出分析模版</button>
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                <button id="restart-btn" type="button" class="secondary-btn">重新测试</button>
-                <button id="toggle-details-btn" type="button" class="info-btn">查看测试详情</button>
+                <!-- 功能说明 -->
+                <div class="function-info-section">
+                    <div class="info-content">
+                        <div class="info-item">
+                            <span class="info-icon">💾</span>
+                            <span class="info-text">填写保存信息，有助于AI做更精准的针对职业的分析和建议</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">📊</span>
+                            <span class="info-text">导出行为表记录了您选择的详细过程，有助于复盘您的选择是否符合心意还是压力过大</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">📄</span>
+                            <span class="info-text">导出分析报告时间较长（1-3分钟），因为调用的是deepseek-r1思考模型，需要对详细测评数据做深度分析</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮组 -->
+                <div class="action-buttons-section">
+                    <div class="action-buttons-row">
+                        <button id="save-info-btn" type="button" class="secondary-btn">💾 保存信息</button>
+                        <button id="export-csv-btn" type="button" class="secondary-btn">📊 导出行为测试表</button>
+                        <button id="export-md-btn" type="button" class="secondary-btn">📄 导出分析模版</button>
+                        <button id="restart-btn" type="button" class="secondary-btn">🔄 重新测试</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
