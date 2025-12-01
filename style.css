@@ -890,3 +890,422 @@ body {
         font-size: 0.85rem;
     }
 }
+
+/* 付费功能弹窗样式 */
+.payment-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.payment-modal.active {
+    display: flex;
+    opacity: 1;
+    visibility: visible;
+    align-items: center;
+    justify-content: center;
+}
+
+.payment-content {
+    background: linear-gradient(135deg, rgba(245, 208, 32, 0.1), rgba(15, 23, 42, 0.95));
+    border: 2px solid var(--primary-color);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(245, 208, 32, 0.3);
+    transform: scale(0.9);
+    transition: all 0.3s ease;
+}
+
+.payment-modal.active .payment-content {
+    transform: scale(1);
+}
+
+.payment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(245, 208, 32, 0.3);
+}
+
+.payment-header h3 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin: 0;
+    font-family: var(--font-heading);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    color: var(--primary-color);
+    background: rgba(245, 208, 32, 0.1);
+    transform: rotate(90deg);
+}
+
+.feature-list {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border: 1px solid rgba(245, 208, 32, 0.2);
+}
+
+.feature-list h4 {
+    color: var(--primary-color);
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+}
+
+.feature-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.feature-list li {
+    color: var(--text-primary);
+    padding: 8px 0;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+}
+
+.payment-options {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.payment-option {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 25px;
+    transition: all 0.3s ease;
+}
+
+.payment-option:hover {
+    border-color: var(--primary-color);
+    background: rgba(245, 208, 32, 0.05);
+    transform: translateY(-2px);
+}
+
+.option-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.option-icon {
+    font-size: 1.5rem;
+}
+
+.option-header h4 {
+    color: var(--primary-color);
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.payment-option p {
+    color: var(--text-secondary);
+    margin: 0 0 20px 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.payment-btn {
+    width: 100%;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.wechat-btn {
+    background: linear-gradient(135deg, #07c160, #00ae42);
+    color: white;
+    box-shadow: 0 4px 15px rgba(7, 193, 96, 0.3);
+}
+
+.wechat-btn:hover {
+    background: linear-gradient(135deg, #06a550, #009937);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(7, 193, 96, 0.4);
+}
+
+.verify-btn {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: #0B1026;
+    box-shadow: 0 4px 15px rgba(245, 208, 32, 0.3);
+}
+
+.verify-btn:hover {
+    background: linear-gradient(135deg, var(--primary-hover), var(--primary-color));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 208, 32, 0.4);
+}
+
+.confirm-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.confirm-btn:hover {
+    background: linear-gradient(135deg, #218838, #1ea085);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.qr-code-section {
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: center;
+}
+
+.qr-code-section.hidden {
+    display: none;
+}
+
+.qr-code-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.qr-code-image {
+    width: 200px;
+    height: 200px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    border: 2px solid var(--primary-color);
+}
+
+.qr-overlay {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    display: none; /* 默认隐藏，不遮挡二维码 */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    z-index: 10;
+}
+
+.qr-price {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.qr-status {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    padding: 0 10px;
+}
+
+.free-deployment-notice {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(0, 123, 255, 0.1);
+    border: 1px solid rgba(0, 123, 255, 0.3);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.free-deployment-notice p {
+    margin: 8px 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.free-deployment-notice strong {
+    color: var(--primary-color);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.payment-instructions {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.payment-instructions p {
+    margin: 5px 0;
+}
+
+.payment-divider {
+    text-align: center;
+    position: relative;
+    margin: 10px 0;
+}
+
+.payment-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.payment-divider span {
+    background: linear-gradient(135deg, rgba(245, 208, 32, 0.1), rgba(15, 23, 42, 0.95));
+    color: var(--text-secondary);
+    padding: 0 20px;
+    position: relative;
+    font-size: 0.9rem;
+}
+
+.test-code-input {
+    display: flex;
+    gap: 10px;
+}
+
+.test-code-input input {
+    flex: 1;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.test-code-input input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 10px rgba(245, 208, 32, 0.3);
+}
+
+.test-code-input input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.payment-status {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.payment-status.hidden {
+    display: none;
+}
+
+.status-message {
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.status-spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    border: 3px solid rgba(245, 208, 32, 0.3);
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.premium-feature {
+    position: relative;
+    overflow: hidden;
+}
+
+.premium-feature::after {
+    content: '🔒';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.premium-feature.unlocked::after {
+    content: '✅';
+}
+
+/* 移动端响应式 */
+@media (max-width: 600px) {
+    .payment-content {
+        padding: 20px;
+        margin: 20px;
+    }
+
+    .payment-header h3 {
+        font-size: 1.3rem;
+    }
+
+    .payment-option {
+        padding: 20px;
+    }
+
+    .test-code-input {
+        flex-direction: column;
+    }
+
+    .payment-options {
+        gap: 15px;
+    }
+}

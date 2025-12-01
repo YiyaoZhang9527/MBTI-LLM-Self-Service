@@ -343,13 +343,27 @@ class MBTIApp {
     console.log('📊 CSV导出完成');
   }
 
-  // 导出Markdown分析报告
+  // 导出Markdown分析报告（需要付费验证）
   async exportMarkdown() {
     if (!this.currentTestData) {
       alert('没有测试数据可导出');
       return;
     }
 
+    // 检查支付权限
+    if (window.paymentManager) {
+      await window.paymentManager.checkPermissionAndExecute(async () => {
+        // 权限验证通过，执行实际的AI报告生成
+        await this.generateAIReport();
+      });
+    } else {
+      // 如果没有支付管理器，直接生成报告
+      await this.generateAIReport();
+    }
+  }
+
+  // 生成AI报告的核心逻辑
+  async generateAIReport() {
     // 检查是否有简化的LLM分析管理器
     if (window.simpleMBTIAnalysisManager) {
       try {

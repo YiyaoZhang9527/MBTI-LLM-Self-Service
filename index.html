@@ -10,7 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20251201-1205">
+    <link rel="stylesheet" href="style.css?v=20251201-1415">
     <meta name="cache-control" content="no-cache, no-store, must-revalidate">
     <meta name="pragma" content="no-cache">
     <meta name="expires" content="0">
@@ -109,9 +109,93 @@
                     <div class="action-buttons-row">
                         <button id="save-info-btn" type="button" class="secondary-btn">💾 保存信息</button>
                         <button id="export-csv-btn" type="button" class="secondary-btn">📊 导出行为测试表</button>
-                        <button id="export-md-btn" type="button" class="secondary-btn">📄 导出分析模版</button>
+                        <button id="export-md-btn" type="button" class="secondary-btn premium-feature" data-feature="ai-report">📄 生成AI分析报告</button>
                         <button id="restart-btn" type="button" class="secondary-btn">🔄 重新测试</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 打赏支持弹窗 -->
+    <div id="payment-modal" class="payment-modal">
+        <div class="payment-content">
+            <div class="payment-header">
+                <h3>💝 感谢支持MBTI测试项目</h3>
+                <button id="close-payment-modal" class="close-btn">&times;</button>
+            </div>
+
+            <div class="payment-body">
+                <div class="feature-list">
+                    <h4>🌟 您的打赏将支持：</h4>
+                    <ul>
+                        <li>🤖 AI分析服务器的运行成本</li>
+                        <li>💬 DeepSeek等AI模型的API调用费用</li>
+                        <li>🔧 持续的功能优化和维护</li>
+                        <li>📚 开源项目的持续发展</li>
+                    </ul>
+                </div>
+
+                <div class="free-deployment-notice">
+                    <p><strong>💡 免费使用说明：</strong></p>
+                    <p>本项目为开源软件，您也可以自行部署来免费使用所有功能。</p>
+                    <p>访问 GitHub 项目页面获取源代码和部署教程。</p>
+                </div>
+
+                <div class="payment-options">
+                    <div class="payment-option">
+                        <div class="option-header">
+                            <span class="option-icon">💰</span>
+                            <h4>微信打赏</h4>
+                        </div>
+                        <p data-price-text>打赏 ¥5.0 支持项目持续发展</p>
+
+                        <div id="qr-code-section" class="qr-code-section hidden">
+                            <div class="qr-code-container">
+                                <img id="wechat-qr-code" src="微信收款码.JPG" alt="微信收款码" class="qr-code-image">
+                                <div class="qr-overlay">
+                                    <div class="qr-price">¥9.9</div>
+                                    <div class="qr-status">请使用微信扫码支付</div>
+                                </div>
+                            </div>
+                            <div class="payment-instructions">
+                                <p>1. 使用微信扫描上方二维码进行打赏</p>
+                                <p>2. 打赏金额：¥5.0（任意金额均可）</p>
+                                <p>3. 打赏完成后点击"我已打赏"</p>
+                            </div>
+                        </div>
+
+                        <button id="wechat-pay-btn" class="payment-btn wechat-btn" data-action="show-qr">
+                            <span class="wechat-icon">💚</span>
+                            <span class="btn-text">打赏支持</span>
+                        </button>
+
+                        <button id="confirm-payment-btn" class="payment-btn confirm-btn hidden" data-action="confirm">
+                            <span class="wechat-icon">✅</span>
+                            我已打赏
+                        </button>
+                    </div>
+
+                    <div class="payment-divider">
+                        <span>或</span>
+                    </div>
+
+                    <div class="payment-option">
+                        <div class="option-header">
+                            <span class="option-icon">🎟️</span>
+                            <h4>支持码验证</h4>
+                        </div>
+                        <p>如果您有支持码，可直接输入验证</p>
+                        <div class="test-code-input">
+                            <input type="text" id="test-code-input" placeholder="请输入支持码" maxlength="20">
+                            <button id="verify-code-btn" class="payment-btn verify-btn">验证</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="payment-status" class="payment-status hidden">
+                    <div class="status-message"></div>
+                    <div class="status-spinner"></div>
                 </div>
             </div>
         </div>
@@ -122,6 +206,7 @@
     <script src="particles.js?v=20251129-1900"></script>
     <script src="app.js?v=20251129-2100"></script>
     <script src="llm-client.js?v=20251129-2400"></script>
+    <script src="payment-manager.js?v=20251201-1407"></script>
 </body>
 
 </html>

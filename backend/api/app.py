@@ -10,6 +10,7 @@ from pathlib import Path
 
 from config.config_loader import Config
 from llm.mbti_service import SimpleMBTIService
+from payment_service import payment_service
 
 
 def create_app():
@@ -249,6 +250,161 @@ def create_app():
             return jsonify({
                 'success': False,
                 'error': f'删除会话失败: {str(e)}'
+            }), 500
+
+    # ==================== 支付相关API ====================
+
+    @app.route('/api/payment/create', methods=['POST'])
+    def create_payment():
+        """创建支付订单"""
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({
+                    'success': False,
+                    'error': '缺少请求数据'
+                }), 400
+
+            amount = data.get('amount', 9.9)
+            product = data.get('product', 'ai_report')
+            test_id = data.get('testId')
+            mbti_type = data.get('mbtiType')
+
+            result = payment_service.create_payment_order(test_id, mbti_type, product)
+
+            return jsonify(result)
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'创建支付订单失败: {str(e)}'
+            }), 500
+
+    @app.route('/api/payment/verify', methods=['POST'])
+    def verify_payment():
+        """验证支付状态"""
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({
+                    'success': False,
+                    'error': '缺少请求数据'
+                }), 400
+
+            payment_id = data.get('paymentId')
+            method = data.get('method', 'wechat')
+
+            if not payment_id:
+                return jsonify({
+                    'success': False,
+                    'error': '缺少支付订单ID'
+                }), 400
+
+            result = payment_service.verify_payment(payment_id, method)
+            return jsonify(result)
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'验证支付失败: {str(e)}'
+            }), 500
+
+    @app.route('/api/payment/check', methods=['POST'])
+    def check_payment_status():
+        """检查支付状态"""
+        try:
+            data = request.get_json()
+            test_id = data.get('testId')
+            order_id = data.get('orderId')
+
+            result = payment_service.check_payment_status(test_id, order_id)
+            return jsonify(result)
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'检查支付状态失败: {str(e)}'
+            }), 500
+
+    @app.route('/api/test-code/verify', methods=['POST'])
+    def verify_test_code():
+        """验证测试码"""
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({
+                    'success': False,
+                    'error': '缺少请求数据'
+                }), 400
+
+            test_code = data.get('code')
+            test_id = data.get('testId')
+
+            if not test_code:
+                return jsonify({
+                    'success': False,
+                    'error': '缺少测试码'
+                }), 400
+
+            result = payment_service.verify_test_code(test_code, test_id)
+            return jsonify(result)
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'验证测试码失败: {str(e)}'
+            }), 500
+
+    @app.route('/api/test-codes/stats', methods=['GET'])
+    def get_test_code_stats():
+        """获取测试码统计信息"""
+        try:
+            stats = payment_service.get_test_code_stats()
+            return jsonify({
+                'success': True,
+                'data': stats
+            })
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'获取测试码统计失败: {str(e)}'
+            }), 500
+
+    @app.route('/api/payment/cleanup', methods=['POST'])
+    def cleanup_expired_records():
+        """清理过期记录"""
+        try:
+            result = payment_service.cleanup_expired_records()
+            return jsonify({
+                'success': True,
+                'message': f"清理完成: {result['cleaned_test_codes']}个过期测试码, {result['cleaned_payments']}个过期支付记录"
+            })
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'清理记录失败: {str(e)}'
+            }), 500
+
+    @app.route('/api/payment/config', methods=['GET'])
+    def get_payment_config():
+        """获取支付配置信息"""
+        try:
+            config = {
+                'success': True,
+                'data': {
+                    'payment_amount': payment_service.payment_amount,
+                    'currency': 'CNY',
+                    'test_code_expiry_hours': payment_service.test_code_expiry_hours
+                }
+            }
+            return jsonify(config)
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'获取支付配置失败: {str(e)}'
             }), 500
 
     @app.errorhandler(404)

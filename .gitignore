@@ -73,4 +73,4 @@ backend/output/
 *.png
 *.json
 mbti_result_*
-mbti_test_report_*
+mbti_test_report_*backend/.env

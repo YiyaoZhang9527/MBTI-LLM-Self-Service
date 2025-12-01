@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>价格测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .price-display { font-size: 24px; font-weight: bold; color: #007bff; }
+        .status { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>MBTI测试价格验证</h1>
+
+    <div class="status" id="loading-status">正在加载价格配置...</div>
+
+    <div class="price-display">
+        当前价格: ¥<span id="price-value">加载中...</span>
+    </div>
+
+    <div class="status" id="api-status"></div>
+
+    <script>
+        // 测试价格配置加载
+        async function testPriceLoading() {
+            const statusEl = document.getElementById('loading-status');
+            const priceEl = document.getElementById('price-value');
+            const apiStatusEl = document.getElementById('api-status');
+
+            const ports = [5002, 5001];
+            let configLoaded = false;
+            let apiBaseUrl = null;
+
+            for (const port of ports) {
+                try {
+                    const response = await fetch(`http://localhost:${port}/api/payment/config`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            priceEl.textContent = data.data.payment_amount;
+                            apiBaseUrl = `http://localhost:${port}`;
+                            configLoaded = true;
+
+                            statusEl.textContent = `✅ 价格配置加载成功 (端口: ${port})`;
+                            apiStatusEl.innerHTML = `
+                                <strong>API基础URL:</strong> ${apiBaseUrl}<br>
+                                <strong>价格:</strong> ¥${data.data.payment_amount}<br>
+                                <strong>货币:</strong> ${data.data.currency}<br>
+                                <strong>测试码过期时间:</strong> ${data.data.test_code_expiry_hours}小时
+                            `;
+                            break;
+                        }
+                    }
+                } catch (error) {
+                    console.log(`端口 ${port} 不可用，尝试下一个...`);
+                    statusEl.textContent = `⚠️ 端口 ${port} 不可用，尝试下一个...`;
+                }
+            }
+
+            if (!configLoaded) {
+                statusEl.textContent = '❌ 无法连接到后端服务';
+                priceEl.textContent = '连接失败';
+            }
+        }
+
+        // 页面加载时执行测试
+        window.addEventListener('load', testPriceLoading);
+
+        // 每隔5秒自动刷新价格
+        setInterval(testPriceLoading, 5000);
+    </script>
+</body>
+</html>
